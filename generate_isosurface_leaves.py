@@ -101,7 +101,7 @@ def generate_sphere(point, radius, number_of_points=50):
             all_points.append([x, y, z])
 
     return all_points
-def generate_surface_root(points,dims,filename) :
+def generate_surface_root(points,dims,filename,config) :
     """
     Generate a 3D iso-surface from given points and dimensions using VTK.
 
@@ -133,17 +133,17 @@ def generate_surface_root(points,dims,filename) :
     # Resample of grid
     resampler = vtk.vtkImageResample()  
     resampler.SetInputData(grid)
-    resampler.SetAxisMagnificationFactor(0, 0.4)  
-    resampler.SetAxisMagnificationFactor(1, 0.4)  
-    resampler.SetAxisMagnificationFactor(2, 0.4)  
+    resampler.SetAxisMagnificationFactor(0, config.grid_resample_rate)  
+    resampler.SetAxisMagnificationFactor(1, config.grid_resample_rate)  
+    resampler.SetAxisMagnificationFactor(2, config.grid_resample_rate)  
     resampler.Update()
     grid_resampled = resampler.GetOutput()
 
     # Gaussian Smoothing 
     gaussian_filter = vtk.vtkImageGaussianSmooth()
     gaussian_filter.SetInputData(grid_resampled)
-    gaussian_filter.SetStandardDeviation(1)  
-    gaussian_filter.SetRadiusFactors(4, 4, 4)  
+    gaussian_filter.SetStandardDeviation(config.outer_sigma)  
+    gaussian_filter.SetRadiusFactors(3, 3, 3)  
     gaussian_filter.Update()
 
     # Marching cube
@@ -161,7 +161,7 @@ def generate_surface_root(points,dims,filename) :
 
     check_memory_usage()
 
-def generate_surface_stem(points,dims,color,filename) :
+def generate_surface_stem(points,dims,color,filename,config) :
     """
     Generate a 3D iso-surface of a stem from given points, dimensions, and color using VTK.
 
@@ -194,17 +194,17 @@ def generate_surface_stem(points,dims,color,filename) :
     # Resample
     resampler = vtk.vtkImageResample()  
     resampler.SetInputData(grid)
-    resampler.SetAxisMagnificationFactor(0, 0.4)  
-    resampler.SetAxisMagnificationFactor(1, 0.4)  
-    resampler.SetAxisMagnificationFactor(2, 0.4)  
+    resampler.SetAxisMagnificationFactor(0, config.grid_resample_rate)  
+    resampler.SetAxisMagnificationFactor(1, config.grid_resample_rate)  
+    resampler.SetAxisMagnificationFactor(2, config.grid_resample_rate)  
     resampler.Update()
     grid_resampled = resampler.GetOutput()
 
     # Gaussian Smoothing
     gaussian_filter = vtk.vtkImageGaussianSmooth()
     gaussian_filter.SetInputData(grid_resampled)
-    gaussian_filter.SetStandardDeviation(0.5)  
-    gaussian_filter.SetRadiusFactors(4, 4, 4)  
+    gaussian_filter.SetStandardDeviation(config.inner_sigma)  
+    gaussian_filter.SetRadiusFactors(3, 3, 3)  
     gaussian_filter.Update()
 
     # Marching Cube
@@ -261,8 +261,8 @@ def process_leaves(curve_points_dict_roots, all_leaves_csv_files, information, c
             for p in cylinder_points:
                 root_points.append([*p] + list(curve_color))
             x_s, y_s, z_s = x, y, z
-        generate_surface_stem(stem_points,dims,curve_color,filename)
-        generate_surface_root(root_points,dims,filename)
+        generate_surface_stem(stem_points,dims,curve_color,filename,config)
+        generate_surface_root(root_points,dims,filename,config)
 
         print(f"Iso-surface saved: iso_surface_{i}.vtk")
 
